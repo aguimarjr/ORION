@@ -1,15 +1,13 @@
 # ORION
 
-ORION: Escalonamento de Tarefas baseado em Otimização Multiobjetivo para Nuvens Veiculares
-
-Respositório principal: [LINK](https://github.com/joahannes/ORION)
-
-# Resumo
-
 Este repositório disponibiliza o ambiente completo de Computação de Borda Veicular (VEC) utilizado no artigo, incluindo código-fonte, geradores de carga, cenários de simulação, scripts de execução e rotinas de análise de resultados.
 Com ele, é possível _instalar, executar_ e _reproduzir_ os experimentos do ORION e dos demais algoritmos de comparação (como FCFS, LOA, MAB, TEMIS, PSO e NSGA3), avaliando métricas como porcentagem de tarefas escalonadas, custo monetário, tempo de uso de CPU e latência do sistema em diferentes condições de cargas de trabalho.
 
+**Título do trabalho**: ORION: Escalonamento de Tarefas baseado em Otimização Multiobjetivo para Nuvens Veiculares
+
 **Resumo do artigo**: A Computação de Borda Veicular (VEC) surge como um paradigma promissor para atender à crescente demanda por processamento de baixa latência em aplicações veiculares, impulsionada pelo aumento contínuo de veículos conectados e pela geração massiva de dados. No entanto, a natureza dinâmica e as restrições de recursos desse ambiente impõem desafios significativos para o escalonamento eficiente de tarefas computacionais. Neste trabalho, propõe-se o ORION, um escalonador baseado em otimização multiobjetivo que utiliza o algoritmo NSGA-II para equilibrar objetivos conflitantes: maximizar o número de tarefas concluídas dentro dos prazos, minimizar o custo monetário e reduzir a latência do sistema. Os resultados demonstram que o ORION supera outras soluções de escalonamento de tarefas em VEC, especialmente em cenários de alta demanda por recursos, mantendo altas taxas de escalonamento, reduzindo custos e alcançando níveis aceitáveis de latência.
+
+**Repositório**: [https://github.com/joahannes/ORION](https://github.com/joahannes/ORION)
 
 # Estrutura do readme.md
 
