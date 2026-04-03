@@ -1,0 +1,12 @@
+numpy
+scipy
+traci
+paretoset
+prettytable
+networkx
+pandas
+pylint
+graphviz
+seaborn
+matplotlib
+notebook
