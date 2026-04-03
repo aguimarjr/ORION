@@ -186,6 +186,8 @@ Quatro métricas são consideradas:
 3. Latência do sistema (s)
 4. Tempo de uso de CPU (ms)
 
+Neste teste mínimo, comparamos apenas o FCFS (escalonador mais simples) com o ORION, a fim de demonstrar o desempenho superior do ORION em relação ao FCFS. Trata-se apenas de um indicativo de que o ambiente está funcional para a execução dos experimentos completos.
+
 # Experimentos
 
 A execução do script `run.sh` deve ser capaz de reproduzir os resultados apresentados no artigo. Lembre-se de estar no diretório `system/` ao executar o script ```bash run.sh n_cores```.
