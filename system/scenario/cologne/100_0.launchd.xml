@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+  <launch>
+   <basedir path="../SUMO-Cologne_Center_2H/">
+   </basedir>
+   <copy file="cologne2.net.xml">
+   </copy>
+   <copy file="new_routes100.rou.xml">
+   </copy>
+   <copy file="vtypes.add.xml">
+   </copy>
+   <copy file="cologne100.sumocfg" type="config">
+   </copy>
+  </launch>
