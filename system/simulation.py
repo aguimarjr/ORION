@@ -49,9 +49,7 @@ options = parser.parse_args()
 
 dirName = 'log/' + str(options.algorithm)
 if not os.path.isdir(dirName):
-	os.makedirs(dirName)
-else:
-	pass
+	os.makedirs(dirName, exist_ok=True)
 
 # simulation log
 current_config = dirName + '/' + str(options.algorithm) + '_TASKS_' + str(options.tasks) + '_RESOURCES_' + str(options.resources) + '_SIZE_' + str(options.weight) + '_RATE_' + str(options.taskrate) + '_CPU_' + str(options.cpucycle) + '_DEADLINE_' + str(options.deadline) + '_SEED-SUMO_' + str(options.seed_sumo) + '_SEED-TASK_' + str(options.seed_task) + '.txt'
