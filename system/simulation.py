@@ -3,6 +3,39 @@
 # Data: 31.10.2025
 # Descricao: Simulator for Task Scheduling in Vehicular Edge Computing
 
+"""
+Módulo de simulação para escalonamento de tarefas em Veicular Edge Computing (VEC).
+
+Este script:
+	1. Define e processa argumentos de linha de comando para configurar a simulação.
+	2. Cria o diretório de logs por algoritmo, caso não exista.
+	3. Gera o nome do arquivo de log com base na configuração atual.
+	4. Remove o arquivo de log anterior com a mesma configuração (quando existente).
+	5. Executa o simulador principal (`src/main.py`) com os parâmetros informados.
+
+Argumentos suportados:
+	-a, --scenario: cenário de simulação.
+	-b, --interval: intervalo de geração/processamento.
+	-c, --tasks: quantidade de tarefas.
+	-d, --begin: tempo inicial da simulação.
+	-e, --end: tempo final da simulação.
+	-f, --radius: raio de cobertura/comunicação.
+	-g, --resources: quantidade de recursos disponíveis.
+	-i, --weight: tamanho/peso das tarefas.
+	-j, --taskrate: taxa de chegada de tarefas.
+	-k, --cpucycle: demanda de ciclos de CPU (megaciclos).
+	-l, --algorithm: algoritmo de escalonamento.
+	-m, --seed_sumo: semente aleatória para o SUMO.
+	-n, --seed_task: semente aleatória para geração de tarefas.
+	-o, --deadline: prazo das tarefas.
+	-p, --startprocess: instante de início do processamento.
+	-q, --steplenght: comprimento do passo da simulação.
+
+Observações:
+	- A execução do simulador é delegada ao comando do sistema operacional via `os.system`.
+	- O caminho de cenário e rede utilizado no comando final está fixado para o cenário de Colônia.
+"""
+
 import argparse
 import os
 

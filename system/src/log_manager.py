@@ -17,10 +17,55 @@
 # [9] delay														#
 #===============================================================#
 
+"""
+Módulo para gerenciamento de logs e consolidação de resultados da simulação.
+
+Este módulo centraliza a criação de arquivos de saída, registro de métricas
+intermediárias (tempo, custo, filas, recursos e tarefas) e geração de
+estatísticas consolidadas ao final da execução.
+
+Principais responsabilidades:
+    - Preparar diretórios e nomes de arquivos de log por configuração.
+    - Registrar eventos e métricas por passo da simulação.
+    - Consolidar resultados finais de escalonamento.
+    - Exportar relatório de balanceamento de carga.
+
+Observações:
+    - O módulo utiliza variáveis globais para armazenar os nomes dos arquivos
+      de saída após a chamada de `get_informations`.
+    - As funções de escrita assumem que `get_informations` foi executada antes.
+"""
+
+
 import os
 import numpy as np
 
 def get_informations(radius, resources, weight, rate, megacycles, algorithm, seed, deadline):
+	"""
+	Inicializa diretórios e arquivos de saída para uma execução da simulação.
+
+	Esta função define caminhos de arquivos globais usados pelas demais rotinas
+	de log e remove arquivos antigos (quando existirem) para evitar mistura de
+	resultados entre execuções.
+
+	Args:
+		radius (int | float): Raio utilizado no cenário.
+		resources (int): Quantidade de recursos disponíveis.
+		weight (int | float): Peso/configuração de carga.
+		rate (int): Taxa de chegada de tarefas.
+		megacycles (int): Demanda de CPU em megaciclos.
+		algorithm (str): Nome do algoritmo em execução.
+		seed (int): Semente para reprodutibilidade.
+		deadline (int | float): Deadline adotado no cenário.
+
+	Side Effects:
+		- Cria diretórios em `output/<algorithm>` e `results/<algorithm>`.
+		- Define variáveis globais com paths de arquivos de log.
+		- Remove arquivos existentes com os mesmos nomes.
+
+	Returns:
+		None
+	"""
 	
 	# cria diretorio para cada algoritmo em output
 	dirName = 'output/' + algorithm
@@ -72,6 +117,22 @@ def get_informations(radius, resources, weight, rate, megacycles, algorithm, see
 	name_fila = dirName + '/FILA_SEED_1_' + str(rate) + '.txt'
 
 def log_resources(step, number, resource_per_cluster, resource, weight, radius):
+	"""
+	Registra o estado de recursos por passo da simulação.
+
+	Cada linha salva possui o formato: `step,number,resource_per_cluster`.
+
+	Args:
+		step (int): Passo atual da simulação.
+		number (int): Identificador/contador associado ao registro.
+		resource_per_cluster (int | float): Recursos observados por cluster.
+		resource (int): Configuração global de recurso para nome do arquivo.
+		weight (int | float): Configuração de peso para nome do arquivo.
+		radius (int | float): Configuração de raio para nome do arquivo.
+
+	Returns:
+		TextIOWrapper: Referência do arquivo (já fechado ao retornar).
+	"""
 	resources_file = open('output/resources_'+str(radius)+'_'+str(resource)+'_'+str(weight)+'.txt','a')
 	resources_file.write(str(step) + "," + str(number) + "," + str(resource_per_cluster) + "\n")
 	resources_file.close()
@@ -79,6 +140,22 @@ def log_resources(step, number, resource_per_cluster, resource, weight, radius):
 	return resources_file
 
 def log_tasks(step, number, tasks, resource, weight, radius):
+	"""
+	Registra a quantidade de tarefas por passo da simulação.
+
+	Cada linha salva possui o formato: `step,number,tasks`.
+
+	Args:
+		step (int): Passo atual da simulação.
+		number (int): Identificador/contador associado ao registro.
+		tasks (int): Quantidade de tarefas observada no passo.
+		resource (int): Configuração global de recurso para nome do arquivo.
+		weight (int | float): Configuração de peso para nome do arquivo.
+		radius (int | float): Configuração de raio para nome do arquivo.
+
+	Returns:
+		TextIOWrapper: Referência do arquivo (já fechado ao retornar).
+	"""
 	tasks_file = open('output/tasks_'+str(radius)+'_'+str(resource)+'_'+str(weight)+'.txt','a')
 	tasks_file.write(str(step) + "," + str(number) + "," + str(tasks) + "\n")
 	tasks_file.close()
@@ -86,6 +163,20 @@ def log_tasks(step, number, tasks, resource, weight, radius):
 	return tasks_file
 
 def log_allocation(step, n_tasks, total_cpu_time):
+	"""
+	Registra dados resumidos de alocação em arquivo de resultados principal.
+
+	Args:
+		step (int): Passo atual da simulação.
+		n_tasks (int): Número de tarefas alocadas/processadas no passo.
+		total_cpu_time (float): Tempo total de CPU consumido.
+
+	Side Effects:
+		- Escreve no arquivo global `name_alloc`.
+
+	Returns:
+		None
+	"""
 
 	total_cpu_time = round(total_cpu_time, 5)
 
@@ -98,29 +189,100 @@ def log_allocation(step, n_tasks, total_cpu_time):
 	allocation_file.close()
 
 def log_time(resultado):
+	"""
+	Registra uma métrica temporal em arquivo de tempo.
+
+	Args:
+		resultado (int | float | str): Valor temporal a ser registrado.
+
+	Side Effects:
+		- Escreve no arquivo global `name_time`.
+
+	Returns:
+		None
+	"""
 
 	time_file = open(name_time,'a')
 	time_file.write(str(resultado) + "\n")
 	time_file.close()
 
 def log_cost(resultado_price):
+	"""
+	Registra métrica de custo/preço em arquivo dedicado.
+
+	Args:
+		resultado_price (int | float | str): Valor de custo a ser registrado.
+
+	Side Effects:
+		- Escreve no arquivo global `name_queue`.
+
+	Returns:
+		None
+	"""
 
 	queue_file = open(name_queue,'a')
 	queue_file.write(str(resultado_price) + "\n")
 	queue_file.close()
 
 def log_cluster(step, nuvens):
+	"""
+	Registra informação de um cluster específico no passo atual.
+
+	Atualmente, a função fixa `nuvem_escolhida = 4` e registra o primeiro campo
+	da estrutura correspondente em `nuvens[nuvem_escolhida][0]`.
+
+	Args:
+		step (int): Passo atual da simulação.
+		nuvens (list | dict): Estrutura com dados dos clusters/nuvens.
+
+	Side Effects:
+		- Escreve no arquivo global `name_cluster`.
+
+	Returns:
+		None
+	"""
 	nuvem_escolhida = 4
 	cluster_file = open(name_cluster, 'a')
 	cluster_file.write(str(step) + '\t' + str(nuvens[nuvem_escolhida][0]) + '\n')
 	cluster_file.close()
 
 def log_fila(step, fila):
+	"""
+	Registra o tamanho da fila de tarefas no passo atual.
+
+	Args:
+		step (int): Passo atual da simulação.
+		fila (list | dict | set): Estrutura que representa a fila de tarefas.
+
+	Side Effects:
+		- Escreve no arquivo global `name_fila`.
+
+	Returns:
+		None
+	"""
 	fila_file = open(name_fila, 'a')
 	fila_file.write(str(step) + '\t' + str(len(fila)) + '\n')
 	fila_file.close()
 
 def log_results(resultados):
+	"""
+	Consolida e registra estatísticas gerais de uma execução.
+
+	A função calcula, a partir do dicionário `resultados`, métricas como:
+	percentual escalonado, média/desvio de delay e média/desvio de tempo em fila.
+	Também imprime um resumo no terminal e grava uma linha consolidada em
+	`name_alloc`.
+
+	Args:
+		resultados (dict): Dicionário com tarefas e seus metadados de execução.
+
+	Side Effects:
+		- Imprime estatísticas no console.
+		- Escreve uma linha de consolidação em `name_alloc`.
+
+	Returns:
+		None
+	"""
 	
 	total_tasks = len(resultados)
 	escalonadas = 0
@@ -166,6 +328,27 @@ def log_results(resultados):
 	allocation_file.close()
 
 def log_results_final(results):
+	"""
+	Gera logs detalhados e consolidados finais de processamento.
+
+	Etapas realizadas:
+		1. Salva, em `name_alloc`, os dados completos de cada tarefa.
+		2. Calcula métricas consolidadas (percentual concluído, delay médio,
+		   tempo médio de fila e custo médio).
+		3. Exibe resumo no terminal.
+		4. Salva consolidação final em `result_name`.
+
+	Args:
+		results (dict): Dicionário com resultados finais por tarefa.
+
+	Side Effects:
+		- Escreve log detalhado em `name_alloc`.
+		- Imprime métricas no console.
+		- Escreve consolidação em `result_name`.
+
+	Returns:
+		None
+	"""
 
 	# guarda informacoes de processamento em arquivo de log
 	total_tasks = len(results)
@@ -248,6 +431,21 @@ def log_results_final(results):
 	result_file.close()
 
 def load_balance(results):
+	"""
+	Salva relatório de balanceamento de carga por estação base/cluster.
+
+	O arquivo gerado contém uma linha com o total agregado e, em seguida,
+	uma linha por identificador presente em `results`.
+
+	Args:
+		results (dict): Mapeamento `{id: valor_de_carga}`.
+
+	Side Effects:
+		- Escreve relatório no arquivo global `balance_name`.
+
+	Returns:
+		None
+	"""
 	balance = open(balance_name, 'w')
 	total = 0
 	for i in results:

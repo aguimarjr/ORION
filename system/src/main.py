@@ -4,6 +4,21 @@
 # author: Joahannes Costa <joahannes.costa@ic.unicamp.br>
 # date: 02.03.2021
 
+"""Módulo principal de execução da simulação ORION.
+
+Este arquivo orquestra a execução completa do sistema, incluindo:
+
+- inicialização de componentes de fila, tarefas, nuvens e escalonamento;
+- configuração e inicialização da simulação SUMO via TraCI;
+- criação de nuvens veiculares e inserção/escalonamento de tarefas;
+- monitoramento do estado do sistema ao longo dos passos de simulação;
+- persistência de resultados, métricas e logs.
+
+As funções aqui definidas são responsáveis pelo ciclo de vida fim a fim da
+simulação, desde o parsing de argumentos da linha de comando até o encerramento
+controlado do processo do SUMO.
+"""
+
 import sys
 import subprocess
 import logging
@@ -47,19 +62,63 @@ for d in dirs:
         os.makedirs(d, exist_ok=True)
 
 def create_dataset(step, radius, resource):
+	"""Prepara o dataset de nós/veículos para o passo atual da simulação.
+
+	Args:
+		step (float): Instante atual da simulação.
+		radius (int): Raio de comunicação considerado para vizinhança.
+		resource (int): Perfil de recurso computacional dos veículos.
+	"""
 	clouds.prepare_nodes(step, traci.vehicle.getIDList(), radius, resource)
 
 def clustering(step, resource):
+	"""Executa a formação de nuvens veiculares no passo atual.
+
+	Args:
+		step (float): Instante atual da simulação.
+		resource (int): Tipo/nível de recurso (ex.: 1, 2, 3, 4 em MIPS).
+	"""
 	# resource => 1, 2, 3, 4 (MIPS)
 	clouds.build_vehicular_clouds(step, resource, schedule)
 
 def run_scheduling(step, algorithm, start_process):
+	"""Dispara o escalonamento de tarefas quando o tempo mínimo é atingido.
+
+	Args:
+		step (float): Instante atual da simulação.
+		algorithm (str): Nome do algoritmo de escalonamento.
+		start_process (int): Tempo mínimo para iniciar o escalonamento.
+	"""
 	# pass
 	if step >= start_process:
 		# print("[DEBUG] ESCALONANDO TAREFAS...")
 		schedule.insert(tasks, queue, clouds, algorithm, step)
 
 def run(network, begin, end, interval, requests, radius, resource, weight, rate, megacycles, algorithm, seed_sumo, seed_task, deadline, start_process, step_lenght):
+	"""Executa o loop principal da simulação e do escalonamento.
+
+	Configura geração de tarefas, monitora o sistema a cada passo, realiza
+	clusterização periódica das nuvens veiculares, insere tarefas na fila e
+	aciona o escalonador conforme a política definida.
+
+	Args:
+		network (str): Arquivo de definição da rede (informativo no fluxo atual).
+		begin (int): Tempo de início do processamento de tarefas.
+		end (int): Duração/fim da janela de simulação.
+		interval (int): Intervalo de clusterização de nuvens veiculares.
+		requests (int): Intervalo de chegada de requisições (parâmetro externo).
+		radius (int): Raio de comunicação entre veículos.
+		resource (int): Perfil de recurso computacional dos veículos.
+		weight (int): Peso médio das tarefas.
+		rate (int): Taxa de geração de tarefas.
+		megacycles (int): Carga computacional média das tarefas.
+		algorithm (str): Algoritmo de escalonamento selecionado.
+		seed_sumo (int|str): Semente usada pelo SUMO.
+		seed_task (int|str): Semente usada para geração de tarefas.
+		deadline (int|str): Parâmetro de deadline para tarefas.
+		start_process (int): Tempo para habilitar escalonamento.
+		step_lenght (float): Tamanho do passo da simulação.
+	"""
 
 	print(f"\n{algorithm} starting...\n")
 
@@ -190,6 +249,34 @@ def run(network, begin, end, interval, requests, radius, resource, weight, rate,
 	time.sleep(1)
 		
 def start_simulation(sumo, scenario, network, begin, end, interval, requests, output, summary, radius, resource, weight, rate, megacycles, algorithm, seed_sumo, seed_task, deadline, start_process, step_lenght):
+	"""Inicializa o SUMO/TraCI e delega a execução ao loop principal.
+
+	A função reserva uma porta livre, inicia o SUMO em modo servidor, conecta
+	o TraCI e executa a simulação. Em caso de falha, registra exceções e garante
+	encerramento do processo do SUMO.
+
+	Args:
+		sumo (str): Comando/binário do SUMO.
+		scenario (str): Arquivo de configuração do cenário SUMO.
+		network (str): Arquivo da rede.
+		begin (int): Tempo de início da simulação lógica.
+		end (int): Tempo final da simulação lógica.
+		interval (int): Intervalo de clusterização.
+		requests (int): Intervalo de requisições.
+		output (str): Arquivo de saída tripinfo.
+		summary (str): Arquivo de saída de resumo.
+		radius (int): Raio de comunicação.
+		resource (int): Perfil de recurso veicular.
+		weight (int): Peso médio das tarefas.
+		rate (int): Taxa de tarefas.
+		megacycles (int): Carga de processamento das tarefas.
+		algorithm (str): Algoritmo de escalonamento.
+		seed_sumo (int|str): Semente do SUMO.
+		seed_task (int|str): Semente de tarefas.
+		deadline (int|str): Prazo das tarefas.
+		start_process (int): Instante de início do escalonamento.
+		step_lenght (float): Tamanho do passo da simulação.
+	"""
 	logging.debug("Finding unused port")
 	
 	unused_port_lock = sumo_manager.UnusedPortLock()
@@ -219,6 +306,11 @@ def start_simulation(sumo, scenario, network, begin, end, interval, requests, ou
 		unused_port_lock.__exit__()
 		
 def main():
+	"""Ponto de entrada da aplicação.
+
+	Realiza o parsing dos argumentos de linha de comando, configura o sistema de
+	logs e inicia a execução da simulação com os parâmetros fornecidos.
+	"""
 	# Option handling
 	parser = OptionParser()
 	parser.add_option("-a", "--command", dest="command", default="sumo", help="The command used to run SUMO [default: %default]", metavar="COMMAND")
@@ -262,6 +354,14 @@ def main():
 	start_simulation(options.command, options.scenario, options.network, options.begin, options.end, options.interval, options.requests, options.output, options.summary, options.radius, options.resource, options.weight, options.rate, options.megacycles, options.algorithm, options.seed_sumo, options.seed_task, options.deadline, options.start_process, options.step_lenght)
 
 def getVehiclePositions(step):
+	"""Registra as posições dos veículos em arquivos por ID.
+
+	Para cada veículo presente na simulação, cria/atualiza um arquivo texto com
+	linhas no formato: ``tempo x y``.
+
+	Args:
+		step (float): Instante atual da simulação.
+	"""
 
 	veiculos = traci.vehicle.getIDList()
 

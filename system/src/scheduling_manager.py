@@ -21,9 +21,45 @@ from scheduler import NSGA3
 from scheduler import PSO
 from scheduler import LOA
 
+
+
 class SchedulingManager:
+	"""
+	Classe responsável pelo gerenciamento do escalonamento de tarefas nas nuvens.
+
+	A classe `SchedulingManager` executa algoritmos de escalonamento, registra tempos
+	de execução, atualiza o estado das tarefas nas filas de controle/final e mantém
+	informações de balanceamento de carga e uso de recursos por nuvem/BS.
+
+	Métodos:
+		- __init__(clouds): Inicializa as estruturas internas de escalonamento e métricas.
+		- insert(tasks, queue, clouds, algorithm, step): Executa o algoritmo selecionado e
+		  aplica as atualizações de estado e recursos.
+		- update_vc_resources(): Método reservado para atualização de recursos da VC.
+		- get_scheduling(): Exibe o estado atual do escalonamento registrado.
+
+	Atributos:
+		- clouds (Clouds): Referência para o gerenciador de nuvens.
+		- escalonamento (dict): Estrutura com tarefas escalonadas por nuvem.
+		- bs_list (dict): Lista de BSs/nuvens conhecidas pelo sistema.
+		- load_balance (dict): Contador de tarefas/alocações por nuvem.
+		- resource_usage (dict): Registro acumulado de uso de recursos por nuvem.
+	"""
 
 	def __init__(self, clouds: Clouds):
+		"""
+		Inicializa o gerenciador de escalonamento e suas estruturas de controle.
+
+		Para cada base station/nuvem disponível em `clouds.basestations`, cria entradas
+		de controle para lista de BSs, balanceamento de carga e uso de recursos.
+
+		Args:
+			clouds (Clouds): Objeto com a topologia/estado das nuvens e BSs.
+
+		Side Effects:
+			- Inicializa os dicionários `escalonamento`, `bs_list`, `load_balance`
+			  e `resource_usage`.
+		"""
 		self.clouds = clouds
 
 		self.escalonamento = {}
@@ -40,6 +76,33 @@ class SchedulingManager:
 			self.resource_usage[id_bs] = {}
 
 	def insert(self, tasks, queue, clouds, algorithm, step):
+		"""
+		Executa o escalonamento de tarefas e atualiza métricas/estado do sistema.
+
+		Seleciona o algoritmo informado, processa a fila de tarefas, registra o tempo
+		de CPU gasto no escalonador e atualiza:
+		- uso de recursos por nuvem;
+		- balanceamento de carga;
+		- tempos de início/fim de cada tarefa;
+		- status das tarefas para `SUBMITTED`;
+		- estrutura interna de escalonamento.
+
+		Args:
+			tasks: Estrutura de tarefas utilizada pelos algoritmos de escalonamento.
+			queue: Fila contendo `task_queue_control` e `final_queue` para atualização.
+			clouds: Instância de nuvens para execução de `update` de recursos.
+			algorithm (str): Nome do algoritmo (FCFS, MAB, ORION, NSGA3, PSO, LOA, TEMIS).
+			step (int | float): Instante atual da simulação para cálculo de tempos.
+
+		Raises:
+			Exception: Quando o nome do algoritmo é inválido.
+
+		Side Effects:
+			- Escreve logs de tempo de CPU via `log.log_time`.
+			- Atualiza `queue.task_queue_control` e `queue.final_queue`.
+			- Atualiza `self.escalonamento`, `self.resource_usage` e `self.load_balance`.
+			- Chama `clouds.update(cloud, resource_usage, 'add')` para cada nuvem processada.
+		"""
 		self.result = {}
 		self.resource_now = {}
 
@@ -158,8 +221,20 @@ class SchedulingManager:
 			clouds.update(cloud, self.resource_usage[cloud], 'add')
 
 	def update_vc_resources(self):
+		"""
+		Método placeholder para atualização de recursos da VC.
+
+		Returns:
+			int: Retorna 0, indicando que a funcionalidade ainda não foi implementada.
+		"""
 		return 0
 
 	def get_scheduling(self):
+		"""
+		Exibe no console o dicionário com o estado atual do escalonamento.
+
+		Side Effects:
+			- Imprime o conteúdo de `self.escalonamento`.
+		"""
 		# retorna o status de execucao das tarefas
 		print(" * ",self.escalonamento)

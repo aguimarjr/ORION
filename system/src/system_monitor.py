@@ -7,8 +7,59 @@ import random
 import logging
 
 class SchedulingMonitor():
+	"""
+	Classe responsável por monitorar o estado das tarefas escalonadas durante a simulação.
+
+	A classe atualiza filas de tarefas, identifica tarefas concluídas ou expiradas,
+	libera recursos nas nuvens veiculares correspondentes e calcula o custo monetário
+	de execução com base no uso de recursos.
+
+	Métodos:
+		- get_status(step, schedule, task, cloud, queue, step_lenght): Atualiza o estado
+		  das tarefas no instante atual da simulação.
+		- check_vehicular_cloud(cloud, queue): Método auxiliar para verificação de
+		  recursos em nuvens veiculares.
+		- resource_price(uso_recursos): Calcula o custo de processamento conforme os
+		  recursos utilizados.
+
+	Atributos:
+		- current_time (float | int): Tempo atual considerado no ciclo de monitoramento.
+		- remove_now (list): Lista temporária com pares [cloud_id, task_id] de tarefas
+		  que devem ser removidas da estrutura de escalonamento.
+	"""
 
 	def get_status(self, step, schedule, task, cloud, queue, step_lenght):
+		"""
+		Atualiza o estado das tarefas no tempo atual da simulação.
+
+		O método executa as seguintes etapas:
+			1. Atualiza a fila de tarefas para o instante `step`.
+			2. Percorre as tarefas escalonadas em cada nuvem veicular.
+			3. Verifica se tarefas já alcançaram seu `finish_time`.
+			4. Para tarefas `SUBMITTED`, marca como `COMPLETED`, define `remove_time`,
+			   remove da fila ativa, calcula custo e libera recursos.
+			5. Para tarefas `EXPIRED`, calcula custo e libera recursos.
+			6. Remove tarefas concluídas/expiradas da estrutura `schedule.escalonamento`.
+
+		Args:
+			step (int | float): Instante atual da simulação.
+			schedule (object): Estrutura de escalonamento contendo mapeamento de tarefas
+				por nuvem e controle de uso de recursos.
+			task (object): Referência para o gerenciador de tarefas (não utilizado
+				diretamente neste método).
+			cloud (object): Componente responsável por atualizar o estado dos recursos
+				da nuvem veicular.
+			queue (object): Estrutura de filas e controle de estado das tarefas.
+			step_lenght (int | float): Duração do passo da simulação.
+
+		Side Effects:
+			- Atualiza `self.current_time` e `self.remove_now`.
+			- Modifica `queue.task_queue_control` e `queue.final_queue`.
+			- Remove itens de `queue.task_queue`.
+			- Atualiza recursos via `cloud.update(...)`.
+			- Remove entradas em `schedule.resource_usage` e `schedule.escalonamento`.
+			- Registra mensagens de debug no logger.
+		"""
 
 		self.current_time = step
 
@@ -66,11 +117,41 @@ class SchedulingMonitor():
 			del schedule.escalonamento[remove_id[0]][remove_id[1]]
 
 	def check_vehicular_cloud(self, cloud, queue):
-		"Check resources in each vehicular clouds."
+		"""
+		Verifica recursos disponíveis em cada nuvem veicular.
+
+		Atualmente este método está implementado como placeholder e retorna 0.
+
+		Args:
+			cloud (object): Estrutura contendo o estado das nuvens veiculares.
+			queue (object): Estrutura de filas de tarefas em processamento/espera.
+
+		Returns:
+			int: Valor fixo `0` indicando ausência de lógica implementada.
+		"""
 		return 0
 
 	def resource_price(self, uso_recursos):
-		"Define monetary cost based on resource used."
+		"""
+		Define o custo monetário com base nos recursos consumidos pela tarefa.
+
+		O cálculo considera preços unitários para recursos de veículos e estação
+		base (BS), multiplicados pelo tempo de processamento e pela quantidade de
+		recursos utilizada.
+
+		Args:
+			uso_recursos (dict): Dicionário com informações de uso de recursos,
+				esperando as chaves:
+				- 'processing_time' (float): Tempo de processamento da tarefa.
+				- 'vehicle' (int | float): Quantidade de recurso de veículo utilizada.
+				- 'bs' (int | float): Quantidade de recurso de estação base utilizada.
+
+		Returns:
+			float: Custo total arredondado para 3 casas decimais.
+
+		Side Effects:
+			- Nenhum. O método apenas realiza o cálculo e retorna o valor.
+		"""
 		# print(uso_recursos)
 		total_price = 0
 		time_using = uso_recursos['processing_time']

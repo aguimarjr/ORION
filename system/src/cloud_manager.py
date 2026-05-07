@@ -27,14 +27,60 @@ if CONSTANTS.CREATE_DATASET == True:
 	else:
 		os.system('rm ' + dir_name + '*.txt')
 
+
+
 class Clouds():
+	"""
+	Classe responsável por gerenciar nuvens veiculares associadas às estações-base (BSs).
+
+	A classe mantém o estado dos recursos computacionais de cada nuvem (CPU veicular,
+	CPU da BS e MIPS total), executa atualização de recursos durante alocação/conclusão
+	de tarefas, forma nuvens veiculares a partir da mobilidade observada e também permite
+	construção baseada em dataset com janela de predição.
+
+	Principais responsabilidades:
+		- Carregar posições das BSs.
+		- Criar e atualizar nuvens veiculares.
+		- Atualizar capacidade disponível após uso de recursos.
+		- Associar veículos às BSs por proximidade (clustering por raio).
+		- Gerar dataset de mobilidade por BS.
+
+	Atributos:
+		- clouds (dict): Estrutura principal com dados de cada nuvem por ID de BS.
+		- basestations (dict): Mapeamento das posições (x, y) de cada estação-base.
+		- probabilities (dict): Probabilidades associadas a cada nuvem/BS.
+	"""
 
 	def __init__(self):
+		"""
+		Inicializa a estrutura de gerenciamento das nuvens.
+
+		Side Effects:
+			- Cria dicionário vazio para nuvens (`clouds`).
+			- Carrega posições das BSs por meio de `get_bs_positions()`.
+			- Cria dicionário de probabilidades (`probabilities`).
+		"""
 		self.clouds = {}
 		self.basestations = self.get_bs_positions()
 		self.probabilities = {}
 
 	def add(self, cloud_id, members, v_cpu, v_memory, bs_cpu, bs_memory, mips_future):
+		"""
+		Adiciona uma nova nuvem veicular na estrutura interna.
+
+		Args:
+			cloud_id (int): Identificador da nuvem (normalmente ID da BS).
+			members (int): Quantidade de veículos membros da nuvem.
+			v_cpu (int | float): CPU disponível no conjunto veicular.
+			v_memory (int | float): Memória veicular disponível (mantida para compatibilidade).
+			bs_cpu (int | float): CPU disponível na estação-base.
+			bs_memory (int | float): Memória da estação-base (mantida para compatibilidade).
+			mips_future (list): Vetor de previsão de recursos/MIPS para janelas futuras.
+
+		Side Effects:
+			- Cria/atualiza entrada em `self.clouds[cloud_id]`.
+			- Inicializa probabilidade fixa da nuvem em `self.probabilities`.
+		"""
 
 		self.id					= cloud_id
 		self.members			= members
@@ -58,6 +104,21 @@ class Clouds():
 		self.probabilities[self.id] = (1/14)
 
 	def vc_update(self, cloud_id, members, v_cpu, v_memory, bs_cpu, bs_memory, mips_future):
+		"""
+		Atualiza os dados de uma nuvem veicular já existente.
+
+		Args:
+			cloud_id (int): Identificador da nuvem (ID da BS).
+			members (int): Quantidade atual de veículos na nuvem.
+			v_cpu (int | float): CPU veicular disponível após atualização.
+			v_memory (int | float): Memória veicular (não persistida atualmente).
+			bs_cpu (int | float): CPU disponível da BS após atualização.
+			bs_memory (int | float): Memória da BS (não persistida atualmente).
+			mips_future (list): Vetor de previsão de recursos/MIPS futuros.
+
+		Side Effects:
+			- Atualiza campos de `self.clouds[cloud_id]` in-place.
+		"""
 		
 		self.id					= cloud_id
 		self.members			= members
@@ -77,6 +138,22 @@ class Clouds():
 		self.clouds[self.id].update({'prediction':self.prediction})
 
 	def update(self, cloud_id, usage, update_type):
+		"""
+		Atualiza recursos disponíveis de uma nuvem após eventos de execução de tarefas.
+
+		Args:
+			cloud_id (int): Identificador da nuvem a ser atualizada.
+			usage (dict): Estrutura com consumo/liberação de recursos.
+				- Para `update_type == 'add'`: esperado dicionário de tarefas,
+				  cada uma contendo chaves `vehicle` e `bs`.
+				- Para `update_type == 'complete'`: esperado dicionário único
+				  com chaves `vehicle` e `bs`.
+			update_type (str): Tipo de atualização ('add' ou 'complete').
+
+		Side Effects:
+			- Modifica `vehicle_cpu`, `bs_cpu` e `mips` em `self.clouds[cloud_id]`.
+			- Em caso de tipo inválido, imprime "INVALID!".
+		"""
 		
 		self.cloud_id = cloud_id
 		self.cpu_usage = 0
@@ -100,15 +177,40 @@ class Clouds():
 			print("INVALID!")		
 
 	def get_clouds(self):
+		"""
+		Retorna a estrutura de nuvens gerenciadas.
+
+		Returns:
+			dict: Dicionário com estado atual das nuvens.
+		"""
 		pass
 
 	def run_mobility_prediction(self):
+		"""
+		Executa rotina de predição de mobilidade (método reservado).
+
+		Notes:
+			- Método ainda não implementado.
+		"""
 		pass
 
 	def build_vehicular_clouds(self, step, resources, schedule):
-		'''
-		Build vehicular clouds base on dataset.
-		'''
+		"""
+		Constrói/atualiza nuvens veiculares com base em dataset de mobilidade e predição.
+
+		A função lê os dados por BS, calcula a janela de predição a partir do `step`
+		corrente e atualiza a capacidade disponível considerando recursos já alocados
+		no agendador (`schedule.resource_usage`).
+
+		Args:
+			step (int): Passo de tempo atual da simulação.
+			resources (int | float): Recurso computacional por veículo.
+			schedule (object): Objeto de escalonamento contendo `resource_usage`.
+
+		Side Effects:
+			- Cria ou atualiza entradas em `self.clouds`.
+			- Calcula e persiste previsões em `prediction` para cada BS.
+		"""
 		self.resources = resources
 
 		prediction_window = [(x+step) for x in range(PREDICTION_WINDOW+1)]
@@ -193,6 +295,22 @@ class Clouds():
 				self.vc_update(id_bs, self.members, self.v_cpu, self.v_cpu, self.bs_cpu, BS_MEMORY, self.resource_prediction)
 
 	def prepare_nodes(self, step, vehicles_list, radius, resources):
+		"""
+		Prepara nós veiculares e forma nuvens com base na posição atual dos veículos.
+
+		A função coleta posições via TraCI, executa clustering por raio e depois cria/
+		atualiza as nuvens veiculares com os recursos informados.
+
+		Args:
+			step (int): Passo de tempo atual da simulação.
+			vehicles_list (list): Lista de IDs de veículos ativos no passo atual.
+			radius (int | float): Raio máximo de cobertura para associação veículo-BS.
+			resources (int | float): Recurso computacional por veículo.
+
+		Side Effects:
+			- Atualiza `self.vehicles` com coordenadas dos veículos.
+			- Pode atualizar `self.clouds` via `create_vehicular_clouds`.
+		"""
 		
 		# print("[DEBUG] >> FORMANDO NUVENS VEICULARES...")
 		
@@ -220,6 +338,22 @@ class Clouds():
 		self.create_vehicular_clouds(vehicular_clouds, resources)
 
 	def run_clustering(self, radius, step):
+		"""
+		Executa associação de veículos às BSs por menor distância dentro de um raio.
+
+		O algoritmo primeiro identifica todas as BSs que cobrem cada veículo e, quando
+		há múltipla cobertura, escolhe a BS mais próxima.
+
+		Args:
+			radius (int | float): Raio de cobertura para considerar um veículo atendido.
+			step (int): Passo de tempo atual (usado para geração de dataset).
+
+		Returns:
+			dict: Mapeamento `id_bs -> [ids_veiculos]` com nuvens veiculares atuais.
+
+		Side Effects:
+			- Chama `create_dataset(step, actual_vehicular_clouds)`.
+		"""
 		# print("RAIO DE %d METROS!" % radius)
 		# radius = 2000
 		mapeamento = {}
@@ -263,6 +397,18 @@ class Clouds():
 		return actual_vehicular_clouds
 
 	def create_vehicular_clouds(self, vehicular_clouds, resources):
+		"""
+		Cria ou atualiza nuvens veiculares a partir do mapeamento BS-veículos.
+
+		Args:
+			vehicular_clouds (dict): Mapeamento `id_bs -> lista de veículos`.
+			resources (int | float): Recurso computacional fornecido por veículo.
+
+		Side Effects:
+			- Se não houver nuvens, cria com `add`.
+			- Caso contrário, atualiza com `vc_update`.
+			- Atualiza previsão padrão (`self.prediction`) com janela fixa.
+		"""
 		
 		cont_membros = 0
 		if len(self.clouds) == 0:
@@ -294,6 +440,15 @@ class Clouds():
 			# print("TOTAL DE VEICULOS:",cont_membros)
 
 	def get_bs_positions(self):
+		"""
+		Carrega a posição das estações-base a partir do arquivo configurado.
+
+		Returns:
+			dict: Dicionário no formato `{id_bs: {'x': float, 'y': float}}`.
+
+		Side Effects:
+			- Atualiza `self.basestations`.
+		"""
 
 		# print("Pegando posicao das BSs...")
 		
@@ -310,6 +465,16 @@ class Clouds():
 		return self.basestations
 
 	def create_dataset(self, step, vehicular_clouds):
+		"""
+		Registra em arquivo a quantidade de veículos por BS no passo atual.
+
+		Args:
+			step (int): Passo de tempo da simulação.
+			vehicular_clouds (dict): Mapeamento `id_bs -> lista de veículos`.
+
+		Side Effects:
+			- Escreve/append em arquivos de dataset por BS em `CONSTANTS.DATASET_FILE`.
+		"""
 
 		for id_bs in vehicular_clouds:
 			filename = open(CONSTANTS.DATASET_FILE + str(id_bs) + '.txt', 'a')
