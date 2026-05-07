@@ -38,3 +38,9 @@ results/
 summary/
 log/
 output/
+
+# PLOTS
+
+plots/teste/
+plots/geral/
+plots/otimizacao/
