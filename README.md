@@ -1,3 +1,14 @@
+<div align="center">
+<pre>
+  ___  ____  ___ ___  _   _ 
+ / _ \|  _ \|_ _/ _ \| \ | |
+| | | | |_) || | | | |  \| |
+| |_| |  _ < | | |_| | |\  |
+ \___/|_| \_\___\___/|_| \_| 
+Computação de Borda Veicular
+</pre>
+</div>
+
 # ORION: Escalonamento de Tarefas baseado em Otimização Multiobjetivo para Nuvens Veiculares
 
 A Computação de Borda Veicular (VEC) surge como um paradigma promissor para atender à crescente demanda por processamento de baixa latência em aplicações veiculares, impulsionada pelo aumento contínuo de veículos conectados e pela geração massiva de dados. No entanto, a natureza dinâmica e as restrições de recursos desse ambiente impõem desafios significativos para o escalonamento eficiente de tarefas computacionais. Neste trabalho, propõe-se o ORION, um escalonador baseado em otimização multiobjetivo que utiliza o algoritmo NSGA-II para equilibrar objetivos conflitantes: maximizar o número de tarefas concluídas dentro dos prazos, minimizar o custo monetário e reduzir a latência do sistema. Os resultados demonstram que o ORION supera outras soluções de escalonamento de tarefas em VEC, especialmente em cenários de alta demanda por recursos, mantendo altas taxas de escalonamento, reduzindo custos e alcançando níveis aceitáveis de latência.
