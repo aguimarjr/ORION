@@ -1,10 +1,13 @@
 <div align="center">
 <pre>
-  ___  ____  ___ ___  _   _ 
- / _ \|  _ \|_ _/ _ \| \ | |
-| | | | |_) || | | | |  \| |
-| |_| |  _ < | | |_| | |\  |
- \___/|_| \_\___\___/|_| \_| 
+    ███████    ███████████   █████    ███████    ██████   █████
+  ███░░░░░███ ░░███░░░░░███ ░░███   ███░░░░░███ ░░██████ ░░███ 
+ ███     ░░███ ░███    ░███  ░███  ███     ░░███ ░███░███ ░███ 
+░███      ░███ ░██████████   ░███ ░███      ░███ ░███░░███░███ 
+░███      ░███ ░███░░░░░███  ░███ ░███      ░███ ░███ ░░██████ 
+░░███     ███  ░███    ░███  ░███ ░░███     ███  ░███  ░░█████ 
+ ░░░███████░   █████   █████ █████ ░░░███████░   █████  ░░█████
+   ░░░░░░░    ░░░░░   ░░░░░ ░░░░░    ░░░░░░░    ░░░░░    ░░░░░
 Computação de Borda Veicular
 </pre>
 </div>
@@ -15,7 +18,7 @@ A Computação de Borda Veicular (VEC) surge como um paradigma promissor para at
 
 ![](img/ORION.png)
 
-Artigo aprovado na Trilha Principal do [SBRC 2026](https://sbrc.sbc.org.br/2026/).
+Artigo aprovado na Trilha Principal do [SBRC 2026](https://sol.sbc.org.br/index.php/sbrc/article/view/42351).
 
 # Dependências
 
@@ -266,9 +269,13 @@ Os resultados obtidos são os seguintes:
     author = {Esteves, Matheus R and Kimura, Bruno and Leone, Maycon and Rocha Filho, Geral P and Villas, Leandro A and {de Souza}, Allan M and {da Costa}, Joahannes B D},
     title = {ORION: Escalonamento de Tarefas baseado em Otimização Multiobjetivo para Nuvens Veiculares},
     booktitle = {XLIV Simp{\'o}sio Brasileiro de Redes de Computadores e Sistemas Distribu{\'\i}dos (SBRC)},
+    location = {Praia do Forte/BA},
     year = {2026},
-    pages = {1--14},
+    issn = {2177-9384},
+    pages = {1094--1107},
     organization = {SBC},
+    address = {Porto Alegre, RS, Brasil},
+    doi = {10.5753/sbrc.2026.19311}
 }
 ```
 
